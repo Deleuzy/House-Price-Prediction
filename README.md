@@ -1,4 +1,6 @@
 # House-Price-Prediction
-In this project I have tried to create multiple algorithms that are able to be tested and provide results for the prediction of the house price in a couple of different datasets while looking at the features that influence it the most.
+In this project I have tried to create multiple algorithms that are able to be tested and provide results for the prediction of the house price in a couple of different datasets while looking at the features that influence it the most. As such in the main side is the different models trained on a main file Housing.csv and once found the best ones - RF, Catboost and Linear Regression - these were deploed on two datasets one from us and the other from australia.
 
-I initially trialed some algorithms with the Housing.csv file to see which ones will work best then I have also tested them on an additional file named new_dataset where a similar type of data was there and see how is it run there and then at the end I have done my final testing on the housing_us and housing_australia files to see what type of results I get there and also see which features matter most between the two differnet geographical and cultural zones
+Feature importance and correlation matrixes where also done in order to see which of the feature have the most importance in determining the price 
+
+
