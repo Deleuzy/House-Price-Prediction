@@ -1,0 +1,75 @@
+# Here I train an XGB model on the extra datset 
+
+import pandas as pd
+from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from xgboost import XGBRegressor
+from sklearn.impute import SimpleImputer
+
+# Load the data
+data = pd.read_csv("new_dataset.csv")
+
+# Split data into features and target variable
+X = data.drop(columns=['SalePrice'])
+y = data['SalePrice']
+
+# One-hot encode categorical features
+X = pd.get_dummies(X)
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Impute missing values with mean
+imputer = SimpleImputer(strategy='mean')
+X_train_imputed = imputer.fit_transform(X_train)
+X_test_imputed = imputer.transform(X_test)
+
+# Standardize the features
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train_imputed)
+X_test_scaled = scaler.transform(X_test_imputed)
+
+# Define the XGBRegressor
+xgb_model = XGBRegressor(random_state=42)
+
+param_grid = {
+    'n_estimators': [100],       # Number of boosting stages
+    'max_depth': [5],            # Maximum depth of trees
+    'learning_rate': [0.1],       # Learning rate shrinks the contribution of each tree
+    'min_child_weight': [1],      # Minimum sum of instance weight (hessian) needed in a child
+    'subsample': [0.8],           # Subsample ratio of the training instance
+    'colsample_bytree': [0.8],    # Subsample ratio of columns when constructing each tree
+    'reg_alpha': [0],             # L1 regularization term on weights
+    'reg_lambda': [1]             # L2 regularization term on weights
+}
+
+# Define Stratified K-Fold Cross-Validation
+skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+# Initialize GridSearchCV
+grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid, cv=skf, scoring='neg_mean_squared_error', n_jobs=-1)
+
+# Perform GridSearchCV
+grid_search.fit(X_train_scaled, y_train)
+
+# Get the best estimator
+best_xgb_model = grid_search.best_estimator_
+
+# Make predictions on training and testing data
+train_preds = best_xgb_model.predict(X_train_scaled)
+test_preds = best_xgb_model.predict(X_test_scaled)
+
+# Calculate metrics
+train_mse = mean_squared_error(y_train, train_preds)
+train_mape = mean_absolute_error(y_train, train_preds) / y_train.mean() * 100
+test_mse = mean_squared_error(y_test, test_preds)
+test_mape = mean_absolute_error(y_test, test_preds) / y_test.mean() * 100
+
+# Print results
+print("Best XGBoost Model Parameters:")
+print(grid_search.best_params_)
+print("Training MSE:", train_mse)
+print("Training MAPE:", train_mape)
+print("Test MSE:", test_mse)
+print("Test MAPE:", test_mape)
